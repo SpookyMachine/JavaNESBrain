@@ -1,6 +1,9 @@
 package com.starflask.JavaNESBrain;
 
+import jario.snes.SNESEmulator;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -34,15 +37,15 @@ import com.starflask.JavaNESBrain.utils.FastMath;
 
 public class SuperBrain {
 
-	VirtualGamePad gamepad;
+	VirtualGamePad gamepad = new VirtualGamePad();
 
-	NES emulator;
+	SNESEmulator emulator;
 
 	GameDataManager gameData;
 
 	public SuperBrain() {
 
-		emulator = new NES();
+		emulator = new SNESEmulator();
 
 		// emulator.run(); do not run continuously.. this class updates each
 		// frame manually
@@ -54,7 +57,7 @@ public class SuperBrain {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
-			System.err.println("Could not set system look and feel. Meh.");
+			System.err.println("Could not set system look and feel.");
 		}
 
 		SuperBrain brain = new SuperBrain();
@@ -100,6 +103,8 @@ public class SuperBrain {
 		emulator.setControllers(getController(), null);
 
 		getGameDataManager().getPositions();
+		
+		
 
 		// if mario gets farther than he has ever been...
 		if (getGameDataManager().getMarioPos().getX() > rightmost) {
@@ -223,6 +228,8 @@ public class SuperBrain {
 		pool.setCurrentFrame(0);
 		timeout = TimeoutConstant;
 		
+		
+		
 		gamepad.clear();
 
 		Species species = pool.getCurrentSpecies();
@@ -239,20 +246,28 @@ public class SuperBrain {
 		HashMap<String, Boolean> gamePadOutputs = evaluateNetwork(genome.getNetwork(), getGameDataManager()
 				.getBrainSystemInputs());
 
+		if(gamePadOutputs!=null)
+		{
+		
 		// if left and right are pressed at once, dont press either.. same with
 		// up and down
-		if (gamePadOutputs.get("P1 Left") && gamePadOutputs.get("P1 Right")) {
+		if (gamePadOutputs.containsKey("P1 Left") &&  gamePadOutputs.get("P1 Left") 
+				&& gamePadOutputs.containsKey("P1 Right") && gamePadOutputs.get("P1 Right")) {
 			gamePadOutputs.put("P1 Left", false);
 			gamePadOutputs.put("P1 Right", false);
 		}
 
-		if (gamePadOutputs.get("P1 Up") && gamePadOutputs.get("P1 Down")) {
+		if (gamePadOutputs.containsKey("P1 Up") && gamePadOutputs.get("P1 Up") 
+				&& 	gamePadOutputs.containsKey("P1 Down") &&  gamePadOutputs.get("P1 Down")) {
 			gamePadOutputs.put("P1 Up", false);
 			gamePadOutputs.put("P1 Down", false);
 		}
 
 		gamepad.setOutputs(gamePadOutputs);
 
+		}
+		
+		
 	}
 
 	/*
@@ -261,12 +276,12 @@ public class SuperBrain {
 	private void generateNetwork(Genome genome) {
 		NeuralNetwork network = new NeuralNetwork();
 
-		for (int i = 1; i < getGameDataManager().getNumInputs(); i++) {
-			network.getNeurons().add(i, new Neuron());
+		for (int i = 0; i < getGameDataManager().getNumInputs(); i++) {
+			network.getNeurons().put(i, new Neuron());
 		}
 
-		for (int o = 1; o < getGameDataManager().getNumOutputs(); o++) {
-			network.getNeurons().add(MaxNodes + o, new Neuron());
+		for (int o = 0; o < getGameDataManager().getNumOutputs(); o++) {
+			network.getNeurons().put(MaxNodes + o, new Neuron());
 
 		}
 
@@ -290,14 +305,14 @@ public class SuperBrain {
 			Gene gene = genome.getGenes().get(i);
 			if (gene.isEnabled()) {
 				if (network.getNeurons().get(gene.getNeuralOutIndex()) == null) {
-					network.getNeurons().add(gene.getNeuralOutIndex(), new Neuron());
+					network.getNeurons().put(gene.getNeuralOutIndex(), new Neuron());
 				}
 
 				Neuron neuron = network.getNeurons().get(gene.getNeuralOutIndex());
 				neuron.getIncomingGeneList().add(gene);
 
 				if (network.getNeurons().get(gene.getNeuralInIndex()) == null)
-					network.getNeurons().add(gene.getNeuralInIndex(), new Neuron());
+					network.getNeurons().put(gene.getNeuralInIndex(), new Neuron());
 			}
 		}
 
@@ -313,9 +328,20 @@ public class SuperBrain {
 	 */
 	private HashMap<String, Boolean> evaluateNetwork(NeuralNetwork network, Integer[] inputs) {
 
-		List<Integer> inputList = Arrays.asList(inputs);
+		
+		List<Integer> inputList = new ArrayList<Integer>();
+		
+		for(int i=0;i < inputs.length; i++)
+		{
+			inputList.add(inputs[i]);
+		}
+		
+		 
 
-		inputList.add(1);
+		 inputList.add(new Integer(1) );  
+		 
+		 
+		 
 
 		if (inputList.size() != this.getGameDataManager().getNumInputs()) {
 			System.err.println("Incorrect number of neural network inputs.");
@@ -326,7 +352,7 @@ public class SuperBrain {
 			network.getNeurons().get(i).setValue(inputList.get(i));
 		}
 
-		for (Neuron neuron : network.getNeurons()) {
+		for (Neuron neuron : network.getNeurons().values()) {
 			float sum = 0;
 
 			for (int j = 1; j < neuron.getIncomingGeneList().size(); j++) {

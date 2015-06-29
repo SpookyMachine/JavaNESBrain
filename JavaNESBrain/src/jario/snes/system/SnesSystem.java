@@ -10,6 +10,7 @@ package jario.snes.system;
 import jario.hardware.Clockable;
 import jario.hardware.Configurable;
 import jario.hardware.Hardware;
+import jario.snes.SNESEmulator;
 
 import java.awt.Canvas;
 import java.awt.event.ActionEvent;
@@ -279,7 +280,7 @@ public class SnesSystem implements Hardware
 					for (int i = 0; i < files.length; i++) urls[i] = files[i].toURI().toURL();
 					loader = new URLClassLoader(urls, this.getClass().getClassLoader());
 				}
-				URL url = file.exists() ? file.toURI().toURL() : loader.getResource("resources" + File.separator + "components.properties");
+				URL url = file.exists() ? file.toURI().toURL() : loader.getResource(SNESEmulator.propertiesPath);
 				if (url != null) prop.load(url.openStream());
 			}
 			catch (IOException e)
