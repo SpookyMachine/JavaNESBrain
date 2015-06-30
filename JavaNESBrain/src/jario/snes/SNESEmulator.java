@@ -16,6 +16,12 @@ public class SNESEmulator
 	public static String propertiesPath =  "jario" + File.separator + "snes" + File.separator + "components.properties";
 	
 	
+	public static void main(String args[])
+	{
+		start();
+	}
+	
+	
 	public static void start()
 	{
 		try

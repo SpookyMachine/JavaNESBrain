@@ -28,7 +28,9 @@ public class AudioPlayer implements Hardware, BusDMA, Configurable
 
 	public AudioPlayer()
 	{
-		sampleRate = 33334; // 62.5 fps
+		
+		sampleRate = 33334; // 62.5 fps		 
+		
 		initAudio(sampleRate);
 	}
 
